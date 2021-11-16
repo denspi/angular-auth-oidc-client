@@ -85,11 +85,6 @@ export class OidcSecurityService {
         this._isSetupAndAuthorized = this._isModuleSetup.pipe(
             filter((isModuleSetup: boolean) => isModuleSetup),
             switchMap(() => {
-                if (!this.configurationProvider.openIDConfiguration.silent_renew) {
-                    this.loggerService.logDebug(`IsAuthorizedRace: Silent Renew Not Active. Emitting.`);
-                    return from([true]);
-                }
-
                 const race$ = this._isAuthorized.asObservable().pipe(
                     filter((isAuthorized: boolean) => isAuthorized),
                     take(1),
@@ -693,9 +688,6 @@ export class OidcSecurityService {
     }
 
     refreshSession(): Observable<boolean> {
-        if (!this.configurationProvider.openIDConfiguration.silent_renew) {
-            return of(false);
-        }
 
         this.loggerService.logDebug('BEGIN refresh session Authorize');
         this.oidcSecurityCommon.silentRenewRunning = 'running';
@@ -940,7 +932,7 @@ export class OidcSecurityService {
     }
 
     private runTokenValidation() {
-        if (this.runTokenValidationRunning || !this.configurationProvider.openIDConfiguration.silent_renew) {
+        if (this.runTokenValidationRunning) {
             return;
         }
         this.runTokenValidationRunning = true;
@@ -966,22 +958,18 @@ export class OidcSecurityService {
                 ) {
                     this.loggerService.logDebug('IsAuthorized: id_token isTokenExpired, start silent renew if active');
 
-                    if (this.configurationProvider.openIDConfiguration.silent_renew) {
-                        this.refreshSession().subscribe(
-                            () => {
-                                this._scheduledHeartBeat = setTimeout(silentRenewHeartBeatCheck, 3000);
-                            },
-                            (err: any) => {
-                                this.loggerService.logError('Error: ' + err);
-                                this._scheduledHeartBeat = setTimeout(silentRenewHeartBeatCheck, 3000);
-                            }
-                        );
-                        /* In this situation, we schedule a heartbeat check only when silentRenew is finished.
-                        We don't want to schedule another check so we have to return here */
-                        return;
-                    } else {
-                        this.resetAuthorizationData(false);
-                    }
+                    this.refreshSession().subscribe(
+                        () => {
+                            this._scheduledHeartBeat = setTimeout(silentRenewHeartBeatCheck, 3000);
+                        },
+                        (err: any) => {
+                            this.loggerService.logError('Error: ' + err);
+                            this._scheduledHeartBeat = setTimeout(silentRenewHeartBeatCheck, 3000);
+                        }
+                    );
+                    /* In this situation, we schedule a heartbeat check only when silentRenew is finished.
+                    We don't want to schedule another check so we have to return here */
+                    return;
                 }
             }
 
