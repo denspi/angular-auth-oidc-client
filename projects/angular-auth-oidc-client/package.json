@@ -13,12 +13,12 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/damienbod/angular-auth-oidc-client.git"
+        "url": "https://github.com/denspi/angular-auth-oidc-client.git"
     },
     "bugs": {
-        "url": "https://github.com/damienbod/angular-auth-oidc-client/issues"
+        "url": "https://github.com/denspi/angular-auth-oidc-client/issues"
     },
-    "homepage": "https://github.com/damienbod/angular-auth-oidc-client",
+    "homepage": "https://github.com/denspi/angular-auth-oidc-client",
     "keywords": [
         "angular",
         "oidc",
